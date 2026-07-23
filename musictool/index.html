@@ -1,236 +1,514 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>울림 격자 — 5음음계 웹 악기</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>함현고등학교 교가 · 가사 학습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#17111F;
-    --panel:#221829;
-    --chalk:#EFE7F5;
-    --muted:#8C7E9B;
-    --line:#3A2C46;
-  }
-  *{ box-sizing:border-box; margin:0; padding:0; }
+:root{
+  --sea-deep:#07182e;
+  --sea-mid:#0d2c4e;
+  --foam:#dfeaf5;
+  --foam-dim:#7e97b3;
+  --wave-gold:#ffd23f;
+  --wave-gold-deep:#ff9f1c;
+  --stroke:#041020;
+  --line-h:#183a5e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Gowun Dodum',-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  background:
+    linear-gradient(180deg,rgba(4,14,28,.66) 0%,rgba(5,18,36,.58) 45%,rgba(4,14,28,.78) 100%),
+    url("assets/background.jpg") center/cover no-repeat fixed,
+    var(--sea-deep);
+  color:var(--foam);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+header{padding:20px 28px 6px;text-align:center;position:relative;z-index:2}
+header h1{
+  font-family:'Black Han Sans','Gowun Dodum',sans-serif;
+  font-size:clamp(22px,3vw,36px);letter-spacing:.06em;color:#fff;
+  text-shadow:0 2px 18px rgba(255,210,63,.25);
+}
+header .credit{margin-top:4px;font-size:13px;color:var(--foam-dim);letter-spacing:.12em}
 
-  body{
-    background:
-      radial-gradient(120% 80% at 50% -10%, #2C1E3A 0%, var(--ink) 55%);
-    min-height:100vh;
-    color:var(--chalk);
-    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-    display:flex; flex-direction:column; align-items:center;
-    padding:48px 20px 64px;
-  }
-
-  .eyebrow{
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size:11px; letter-spacing:.28em; text-transform:uppercase;
-    color:var(--muted); margin-bottom:14px;
-  }
-  h1{
-    font-size:clamp(30px,7vw,48px); font-weight:800; letter-spacing:-.03em;
-    line-height:1.05; text-align:center;
-  }
-  .sub{
-    color:var(--muted); font-size:14px; margin-top:12px;
-    text-align:center; line-height:1.7; max-width:34ch;
-  }
-
-  /* 격자 — 왼쪽 아래가 가장 낮은 음, 오른쪽 위로 갈수록 높아짐 */
-  #grid{
-    margin-top:36px;
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:10px;
-    width:min(520px,100%);
-    touch-action:none;      /* 모바일에서 끌기가 스크롤로 새지 않도록 */
-  }
-
-  .cell{
-    position:relative;
-    aspect-ratio:1/1;
-    border:1px solid var(--line);
-    border-radius:14px;
-    background:var(--panel);
-    color:var(--muted);
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size:13px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; user-select:none;
-    transition:background .5s ease, color .5s ease, border-color .5s ease, transform .08s ease;
-  }
-  .cell:focus-visible{ outline:2px solid var(--chalk); outline-offset:3px; }
-
-  .cell.on{
-    background:hsl(var(--h) 70% 58%);
-    border-color:hsl(var(--h) 70% 72%);
-    color:#17111F;
-    transform:scale(.94);
-    transition:none;
-  }
-
-  /* 시그니처: 음이 울릴 때 퍼져 나가는 파동 */
-  .cell::after{
-    content:""; position:absolute; inset:0;
-    border:2px solid hsl(var(--h) 80% 70%);
-    border-radius:14px; opacity:0; pointer-events:none;
-  }
-  .cell.on::after{ animation:ring .7s ease-out; }
-  @keyframes ring{
-    from{ opacity:.9; transform:scale(1); }
-    to  { opacity:0;  transform:scale(1.9); }
-  }
-  @media (prefers-reduced-motion:reduce){
-    .cell.on::after{ animation:none; }
-    .cell.on{ transform:none; }
-  }
-
-  .controls{ margin-top:28px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-  button{
-    font-family:inherit; font-size:14px; font-weight:600;
-    color:var(--chalk); background:transparent;
-    border:1px solid var(--line); border-radius:999px;
-    padding:11px 22px; cursor:pointer;
-    transition:background .2s, border-color .2s;
-  }
-  button:hover{ background:var(--panel); border-color:var(--muted); }
-
-  footer{
-    margin-top:44px; color:var(--muted); font-size:12px;
-    text-align:center; line-height:1.9;
-  }
-  code{ font-family:ui-monospace,monospace; color:var(--chalk); }
+/* ---------- 무대: 한 번에 한 줄 ---------- */
+#stage{
+  flex:1;position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:22px;padding:0 12px;min-height:0;
+}
+#linePanel{
+  padding:.25em .5em;border-radius:.3em;
+  background:rgba(4,14,28,.42);
+  box-shadow:0 0 60px 30px rgba(4,14,28,.42);
+  font-size:min(9vw,11vh,86px);
+  animation:pop .4s ease;
+}
+#lineWrap{
+  position:relative;display:inline-block;
+  font-family:'Black Han Sans','Gowun Dodum',sans-serif;
+  line-height:1.35;white-space:nowrap;
+}
+/* ---------- 제목 화면(전주) ---------- */
+#titleScreen{
+  position:absolute;inset:0;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .8s ease;
+}
+#titleScreen.hide{opacity:0;pointer-events:none}
+#tsMain{
+  font-family:'Black Han Sans','Gowun Dodum',sans-serif;
+  font-size:min(11vw,14vh,110px);
+  color:#fff;-webkit-text-stroke:.14em var(--stroke);paint-order:stroke fill;
+  letter-spacing:.04em;text-align:center;
+  text-shadow:0 0 40px rgba(255,210,63,.35);
+  animation:pop .6s ease;
+}
+#tsCredit{
+  position:absolute;right:6vw;bottom:8vh;text-align:right;
+  font-family:'Black Han Sans','Gowun Dodum',sans-serif;
+  font-size:min(3.4vw,4.5vh,30px);line-height:1.6;
+  color:var(--wave-gold);-webkit-text-stroke:.1em var(--stroke);paint-order:stroke fill;
+}
+#lyricView{display:flex;flex-direction:column;align-items:center;gap:22px;transition:opacity .8s ease}
+#countdown{
+  min-height:1.3em;
+  font-family:'Black Han Sans','Gowun Dodum',sans-serif;
+  font-size:min(9vw,12vh,90px);
+  color:var(--wave-gold);
+  -webkit-text-stroke:.12em var(--stroke);paint-order:stroke fill;
+  text-shadow:0 0 34px rgba(255,210,63,.5);
+  letter-spacing:.06em;
+}
+#countdown.tick{animation:cdPop .32s ease}
+@keyframes cdPop{from{transform:scale(1.7);opacity:.2}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){#countdown.tick{animation:none}}
+#lyricView.hide{opacity:0;pointer-events:none}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){#linePanel,#tsMain{animation:none}}
+/* 아래층: 흰 글자 + 두꺼운 남색 테두리 */
+.txt{
+  -webkit-text-stroke:.16em var(--stroke);
+  paint-order:stroke fill;
+  color:#fff;
+  letter-spacing:.02em;
+}
+/* 위층: 같은 글자를 금색으로 덮어쓰기(와이프) */
+#wipe{
+  position:absolute;inset:0;width:0;overflow:hidden;pointer-events:none;
+}
+#wipe .txt{
+  color:var(--wave-gold);
+  -webkit-text-stroke:.16em #7a3d00;
+  text-shadow:0 0 26px rgba(255,210,63,.45);
+  white-space:nowrap;
+}
+.gap{display:inline-block;width:.4em}
+#hint{font-size:15px;color:var(--foam-dim)}
 </style>
 </head>
 <body>
 
-  <p class="eyebrow">Web Audio · 단일 파일</p>
-  <h1>울림 격자</h1>
-  <p class="sub">칸을 누르면 소리가 납니다. 누른 채로 쓸어 보세요.<br>5음음계라 어떻게 눌러도 어울립니다.</p>
+<header id="hd" style="opacity:0">
+  <h1>함현고등학교 교가</h1>
+  <div class="credit">김희자 작사 · 지수현 작곡</div>
+</header>
 
-  <div id="grid"></div>
-
-  <div class="controls">
-    <button id="cascade">차례로 울리기</button>
-    <button id="random">무작위로 12번</button>
+<div id="stage">
+  <div id="titleScreen">
+    <div id="tsMain">함현고등학교 교가</div>
+    <div id="tsCredit">김희자 작사<br>지수현 작곡</div>
+    <div id="hint" style="position:absolute;bottom:2vh;left:0;right:0;text-align:center"></div>
   </div>
+  <div id="lyricView" class="hide">
+    <div id="countdown"></div>
+    <div id="linePanel">
+      <div id="lineWrap">
+        <div class="txt" id="baseTxt"></div>
+        <div id="wipe"><div class="txt" id="overTxt"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <footer>
-    소리는 브라우저가 직접 만듭니다. 음원 파일이 없습니다.<br>
-    <code>index.html</code> 파일 하나로 동작합니다.
-  </footer>
+<div id="waves" aria-hidden="true" style="position:fixed;left:0;right:0;bottom:0;height:180px;z-index:1;pointer-events:none;opacity:.25">
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="position:absolute;bottom:0;width:200%;height:100%;animation:drift 14s linear infinite"><path fill="#0f3a63" d="M0,60 C150,100 300,20 450,60 C600,100 750,20 900,60 C1050,100 1150,40 1200,60 L1200,120 L0,120 Z"/></svg>
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="position:absolute;bottom:-24px;width:200%;height:100%;opacity:.5;animation:drift 23s linear infinite reverse"><path fill="#155084" d="M0,70 C200,30 400,110 600,70 C800,30 1000,110 1200,70 L1200,120 L0,120 Z"/></svg>
+</div>
+<style>@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}@media (prefers-reduced-motion:reduce){#waves svg{animation:none!important}}</style>
+
+<div id="syncPanel" style="display:none;position:relative;z-index:3;background:#0a2138;border-top:1px solid var(--line-h);padding:14px 22px;font-size:14px;line-height:1.7">
+  <b style="color:var(--wave-gold)">싱크 조정 모드</b> — 재생 중 <u>각 어절이 시작되는 순간</u> 스페이스바를 누르세요(총 35탭: 어절 34개 + 노래 끝). 잘못 눌렀으면 <b>Backspace</b>로 취소. 다 찍으면 자동 적용됩니다.
+  <span id="syncStatus"></span>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+    <button id="tapBtn">👆 탭 (스페이스바)</button>
+    <button id="syncReset">처음부터 다시</button>
+    <button id="copyTiming">타이밍 코드 복사</button>
+    <button id="applyTiming">아래 코드 적용</button>
+    <span id="syncMsg" style="color:#8fe3a1;margin-left:6px"></span>
+  </div>
+  <textarea id="timingBox" spellcheck="false" placeholder="복사해 둔 타이밍 코드를 붙여넣고 [아래 코드 적용]을 누르면 됩니다." style="width:100%;height:64px;margin-top:8px;background:#071627;color:#cfe2f5;border:1px solid #23507f;border-radius:8px;padding:8px;font-size:12px;font-family:ui-monospace,Consolas,monospace"></textarea>
+</div>
+
+<div id="bar" style="position:relative;z-index:3;background:rgba(5,16,32,.88);backdrop-filter:blur(10px);border-top:1px solid var(--line-h);padding:12px 20px 16px">
+  <div id="progressWrap" style="height:8px;border-radius:4px;background:#12304f;cursor:pointer;margin-bottom:12px"><div id="progress" style="height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--wave-gold),var(--wave-gold-deep))"></div></div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap">
+    <span id="time" style="font-variant-numeric:tabular-nums;font-size:14px;color:var(--foam-dim);min-width:96px;text-align:center">0:00 / 0:00</span>
+    <button id="prevLine">◀ 이전 소절</button>
+    <button id="restartBtn">⏮ 처음부터</button>
+    <button id="playBtn" style="font-size:17px;padding:11px 30px;border-radius:999px;background:linear-gradient(135deg,var(--wave-gold),var(--wave-gold-deep));color:#07182e;border:none">▶ 재생</button>
+    <button id="nextLine">다음 소절 ▶</button>
+    <label style="font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="loopChk" style="width:16px;height:16px;accent-color:var(--wave-gold);cursor:pointer">한 곡 반복
+    </label>
+    <span style="display:flex;align-items:center;gap:6px">
+      <button id="keyDown" title="키 내림">♭ −</button>
+      <b id="keyLabel" style="min-width:52px;text-align:center;font-size:15px;color:var(--wave-gold)">키 0</b>
+      <button id="keyUp" title="키 올림">♯ +</button>
+    </span>
+    <label style="font-size:14px">속도
+      <select id="rate" style="font-family:inherit;font-size:14px;background:#123054;color:var(--foam);border:1px solid #23507f;border-radius:10px;padding:8px 10px;cursor:pointer">
+        <option value="0.7">0.7×</option>
+        <option value="0.85">0.85×</option>
+        <option value="1" selected>1.0×</option>
+      </select>
+    </label>
+    <button id="syncToggle">🎯 싱크 조정</button>
+  </div>
+</div>
+<style>
+button{font-family:inherit;font-size:14px;font-weight:700;color:var(--foam);background:#123054;border:1px solid #23507f;border-radius:10px;padding:9px 16px;cursor:pointer;transition:background .15s}
+button:hover{background:#1a4270}
+button:focus-visible{outline:2px solid var(--wave-gold);outline-offset:2px}
+#playBtn:hover{filter:brightness(1.07)}
+.badge{display:inline-block;background:#ff5d5d;color:#fff;border-radius:6px;font-size:12px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+</style>
+
+<div id="audioErr" style="display:none;position:relative;z-index:4;background:#5c1f1f;color:#ffd9d9;padding:10px 20px;font-size:14px;text-align:center;line-height:1.6">
+  <span id="errMsg"></span>
+  <input type="file" id="filePick" accept="audio/*" style="margin-left:10px">
+</div>
+<audio id="audio" preload="auto"></audio>
 
 <script>
-/* ── 소리 만들기 ────────────────────────────────── */
+/* ================= 가사 데이터 =================
+   w: 음절별 박자 가중치(악보 리듬) — 어절 안에서의 채움 속도 배분 */
+let LINES = [
+  { txt:"황해의 푸른 파도 가슴에 안고",      w:[2,1,.5,.5,.5,.5,2.5,1.5,1.5,1.5,1.5,2.5] },
+  { txt:"시화의 너른 대지 호기 서린 곳",     w:[2,1.5,.5,.5,.5,1,3,1.5,1.5,1,1,3] },
+  { txt:"배움의 높은 터전 우리의 함현",      w:[1.5,1.5,.5,.5,.5,1,3,1,1.5,.5,1.5,2.5] },
+  { txt:"보랏빛 희망 속에 마음을 모아",      w:[1,1.5,1.5,.5,.75,.75,1,2,1,1,1,2.5] },
+  { txt:"품성과 덕행을 길러 나가자",         w:[1,1,2.5,.75,.75,2.5,1,1,2,1,1] },
+  { txt:"아 아 우리의 함현 함현",           w:[3.5,2.5,.75,.75,1,2,2,2,2] },
+  { txt:"영원히 빛나거라 길이길이 빛나거라",  w:[1,1,1.5,.75,.75,1,2.5,.5,.5,1,1,1,1,1,3] },
+];
 
-const 도레미솔라 = ["도","레","미","솔","라"];
-const 반음     = [0, 2, 4, 7, 9];   // 5음음계(펜타토닉)의 반음 간격
-const 칸수 = 20, 열수 = 5;
-const 기준음 = 130.81;               // 낮은 도(C3)의 진동수(Hz)
-
-let 오디오;                          // 첫 클릭 때 만들어집니다(브라우저 정책)
-
-function 진동수(i){
-  const 옥타브 = Math.floor(i / 5), 계이름 = i % 5;
-  return 기준음 * Math.pow(2, (반음[계이름] + 12 * 옥타브) / 12);
-}
-
-function 연주(i){
-  if(!오디오) 오디오 = new (window.AudioContext || window.webkitAudioContext)();
-  const t = 오디오.currentTime;
-
-  // 소리 크기 곡선: 순간적으로 커졌다가 서서히 사라짐
-  const 볼륨 = 오디오.createGain();
-  볼륨.gain.setValueAtTime(0, t);
-  볼륨.gain.linearRampToValueAtTime(0.14, t + 0.012);
-  볼륨.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-
-  // 고음을 깎아 부드럽게
-  const 필터 = 오디오.createBiquadFilter();
-  필터.type = "lowpass";
-  필터.frequency.value = 2600;
-
-  // 파형 두 개를 살짝 어긋나게 겹쳐 두툼한 음색을 만듦
-  [["triangle", 0], ["sine", 6]].forEach(([파형, 어긋남]) => {
-    const 발진기 = 오디오.createOscillator();
-    발진기.type = 파형;
-    발진기.frequency.value = 진동수(i);
-    발진기.detune.value = 어긋남;
-    발진기.connect(볼륨);
-    발진기.start(t);
-    발진기.stop(t + 1.7);
+/* ============ 어절(WORDS) 구조 생성 ============ */
+const WORDS=[]; // {li, txt, w:[음절가중치], s0:라인 내 시작 음절 idx}
+LINES.forEach((L,li)=>{
+  const chars=[...L.txt];
+  const n=chars.filter(c=>c!==' ').length;
+  L.w=(L.w&&L.w.length===n)?L.w:Array(n).fill(1);
+  let syl=0, cur='', curW=[], s0=0;
+  const flush=()=>{ if(cur){WORDS.push({li,txt:cur,w:curW,s0}); cur=''; curW=[];} };
+  chars.forEach(c=>{
+    if(c===' '){flush(); s0=syl; return;}
+    if(!cur) s0=syl;
+    cur+=c; curW.push(L.w[syl]); syl++;
   });
+  flush();
+  L.firstWord = WORDS.findIndex(w=>w.li===li);
+});
+const NW=WORDS.length; // 34
 
-  볼륨.connect(필터);
-  필터.connect(오디오.destination);
+/* ============ 어절 타이밍 T ============
+   T[k] = k번째 어절 시작(초), T[NW] = 노래 끝나는 순간. 총 NW+1개.
+   기본값: 소절 탭싱크(사용자 제공) + 악보 가중치로 계산한 추정치.
+   [싱크 조정]에서 어절별로 다시 찍으면 정확해집니다. */
+let T = [10.62,12.57,13.44,15.15,17.69,19.92,21.64,22.49,24.31,26,27.17,29.61,31.34,32.1,34.08,35.92,38.46,40.26,40.96,42.72,45.25,47.25,49.68,51.93,53.56,56.54,57.01,58.8,61.15,62.65,65.64,66.97,70.13,71.86,75.71]; /* 어절 34개 시작 + 노래 끝 (탭싱크 반영) */
+
+/* ---------- 오디오 로딩 ---------- */
+const audio=document.getElementById('audio');
+const errBox=document.getElementById('audioErr');
+function showErr(m){errBox.style.display='block';document.getElementById('errMsg').textContent=m;}
+audio.src='assets/school-song.mp3';
+audio.addEventListener('error',()=>{const c=audio.error?audio.error.code:0;showErr('음원 재생 오류(코드 '+c+'). MP3 파일을 직접 선택해 주세요.');});
+audio.addEventListener('canplay',()=>{errBox.style.display='none';});
+document.getElementById('filePick').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  audio.src=URL.createObjectURL(f);errBox.style.display='none';
+});
+
+/* ---------- 한 줄 렌더링 ---------- */
+const baseTxt=document.getElementById('baseTxt');
+const overTxt=document.getElementById('overTxt');
+const wipe=document.getElementById('wipe');
+const lineWrap=document.getElementById('lineWrap');
+const hint=document.getElementById('hint');
+let shownLine=-1,sylSpans=[];
+
+function buildLine(s){return [...s].map(ch=>ch===' '?'<span class="gap"></span>':'<span class="syl">'+ch+'</span>').join('');}
+const titleScreen=document.getElementById('titleScreen');
+const lyricView=document.getElementById('lyricView');
+const linePanel=document.getElementById('linePanel');
+let titleShown=true;
+const hd=document.getElementById('hd');
+const cdEl=document.getElementById('countdown');
+let cdShown='';
+function setCountdown(label){
+  if(label===cdShown) return;
+  cdShown=label;
+  cdEl.textContent=label;
+  if(label){cdEl.classList.remove('tick');cdEl.offsetHeight;cdEl.classList.add('tick');}
 }
+function setView(title){
+  if(title===titleShown) return;
+  titleShown=title;
+  titleScreen.classList.toggle('hide',!title);
+  lyricView.classList.toggle('hide',title);
+  hd.style.transition='opacity .8s ease';
+  hd.style.opacity=title?'0':'1';
+}
+function showLine(i){
+  shownLine=i;
+  baseTxt.innerHTML=buildLine(LINES[i].txt);
+  overTxt.innerHTML=buildLine(LINES[i].txt);
+  sylSpans=[...baseTxt.querySelectorAll('.syl')];
+  wipe.style.width='0px';
+  linePanel.style.animation='none';linePanel.offsetHeight;linePanel.style.animation='';
+}
+showLine(0);
+hint.textContent='▶ 재생을 누르면 반주 후 노래가 시작됩니다';
 
-/* ── 화면 만들기 ────────────────────────────────── */
-
-const 격자 = document.getElementById("grid");
-const 칸들 = [];
-
-// 아래쪽이 낮은 음이 되도록 위에서부터 거꾸로 그림
-for(let 줄 = 3; 줄 >= 0; 줄--){
-  for(let 열 = 0; 열 < 열수; 열++){
-    const i = 줄 * 열수 + 열;
-    const 칸 = document.createElement("button");
-    칸.className = "cell";
-    칸.style.setProperty("--h", 350 - i * 9);      // 장미빛 → 금빛 → 옥빛
-    칸.textContent = 도레미솔라[i % 5] + (3 + Math.floor(i / 5));
-    칸.dataset.i = i;
-    격자.appendChild(칸);
-    칸들[i] = 칸;
+/* 시각 → {어절 idx, 어절 내 진행률} */
+function wordAt(t){
+  if(t<T[0]) return {k:0,frac:0};
+  for(let k=0;k<NW;k++){
+    if(t<T[k+1]) return {k,frac:(t-T[k])/(T[k+1]-T[k]||1)};
   }
+  return {k:NW-1,frac:1};
+}
+/* 어절 내 진행률 → 픽셀(음절 가중치 반영) */
+function wipePx(k,frac){
+  const W=WORDS[k];
+  if(!sylSpans.length) return 0;
+  const wrapL=lineWrap.getBoundingClientRect().left;
+  const total=W.w.reduce((a,b)=>a+b,0);
+  let target=frac*total, acc=0;
+  for(let j=0;j<W.w.length;j++){
+    if(target<=acc+W.w[j]){
+      const inner=(target-acc)/W.w[j];
+      const r=sylSpans[W.s0+j].getBoundingClientRect();
+      return (r.left-wrapL)+r.width*Math.min(1,Math.max(0,inner));
+    }
+    acc+=W.w[j];
+  }
+  const r=sylSpans[W.s0+W.w.length-1].getBoundingClientRect();
+  return r.right-wrapL;
 }
 
-function 울리기(i){
-  연주(i);
-  const 칸 = 칸들[i];
-  칸.classList.remove("on");
-  void 칸.offsetWidth;                              // 애니메이션 다시 시작시키기
-  칸.classList.add("on");
-  setTimeout(() => 칸.classList.remove("on"), 700);
+/* ---------- 컨트롤 ---------- */
+const playBtn=document.getElementById('playBtn');
+function fmt(s){s=Math.max(0,s|0);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function togglePlay(){
+  if(!audio.src){document.getElementById('filePick').click();return;}
+  audio.paused?audio.play().catch(e=>showErr('재생 거부: '+e.message)):audio.pause();
 }
-
-/* ── 조작 ──────────────────────────────────────── */
-
-let 누르는중 = false;
-
-격자.addEventListener("pointerdown", e => {
-  const 칸 = e.target.closest(".cell");
-  if(!칸) return;
-  누르는중 = true;
-  울리기(+칸.dataset.i);
+playBtn.addEventListener('click',togglePlay);
+audio.addEventListener('play',()=>{playBtn.textContent='⏸ 일시정지';hint.textContent='';});
+audio.addEventListener('pause',()=>playBtn.textContent='▶ 재생');
+document.getElementById('restartBtn').addEventListener('click',()=>{audio.currentTime=0;audio.play();});
+document.getElementById('rate').addEventListener('change',e=>audio.playbackRate=+e.target.value);
+function lineStartTime(li){return T[LINES[li].firstWord];}
+document.getElementById('prevLine').addEventListener('click',()=>{
+  const back=audio.currentTime<lineStartTime(shownLine)+1;
+  const i=Math.max(0,shownLine-(back?1:0));
+  audio.currentTime=lineStartTime(i)+0.01;if(audio.paused)audio.play();
+});
+document.getElementById('nextLine').addEventListener('click',()=>{
+  const i=Math.min(LINES.length-1,shownLine+1);
+  audio.currentTime=lineStartTime(i)+0.01;if(audio.paused)audio.play();
+});
+const progressWrap=document.getElementById('progressWrap');
+const progress=document.getElementById('progress');
+const timeEl=document.getElementById('time');
+progressWrap.addEventListener('click',e=>{
+  const r=progressWrap.getBoundingClientRect();
+  audio.currentTime=(e.clientX-r.left)/r.width*audio.duration;
 });
 
-// 누른 채로 이동하면 손가락(마우스) 아래 칸이 계속 울림
-격자.addEventListener("pointermove", e => {
-  if(!누르는중) return;
-  const 칸 = document.elementFromPoint(e.clientX, e.clientY)?.closest(".cell");
-  if(칸 && !칸.classList.contains("on")) 울리기(+칸.dataset.i);
+/* ---------- 메인 루프 ---------- */
+function tick(){
+  const t=audio.currentTime;
+  if(audio.duration){
+    progress.style.width=(t/audio.duration*100)+'%';
+    timeEl.textContent=fmt(t)+' / '+fmt(audio.duration);
+  }
+  setView(t < T[0]-3.2);
+  /* 첫 소절 카운트다운: 3 → 2 → 1 → 시작! */
+  const rem=T[0]-t;
+  if(rem>0 && rem<=3.2) setCountdown(String(Math.min(3,Math.ceil(rem))));
+  else if(rem<=0 && t<T[0]+0.7) setCountdown('시작!');
+  else setCountdown('');
+  const {k,frac}=wordAt(t);
+  const li=WORDS[k].li;
+  if(li!==shownLine) showLine(li);
+  /* 현재 어절 앞부분은 가득, 현재 어절은 진행률만큼 */
+  const before=(k>LINES[li].firstWord)?wipePx(k-1,1):0;
+  wipe.style.width=Math.max(before,wipePx(k,frac))+'px';
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ---------- 어절 단위 싱크 조정 ---------- */
+const syncPanel=document.getElementById('syncPanel');
+const syncStatus=document.getElementById('syncStatus');
+const syncMsg=document.getElementById('syncMsg');
+const timingBox=document.getElementById('timingBox');
+let syncMode=false,taps=[];
+function tapLabel(){
+  if(taps.length<NW){
+    const W=WORDS[taps.length];
+    return '다음 탭 → <b style="color:var(--wave-gold)">「'+W.txt+'」</b> 가 시작되는 순간 ('+(taps.length+1)+'/'+(NW+1)+')';
+  }
+  return '마지막 탭 → <b style="color:var(--wave-gold)">노래가 끝나는 순간</b> ('+(NW+1)+'/'+(NW+1)+')';
+}
+function updateSync(){syncStatus.innerHTML=' <span class="badge">'+taps.length+'/'+(NW+1)+'</span> '+tapLabel();}
+document.getElementById('syncToggle').addEventListener('click',()=>{
+  syncMode=!syncMode;
+  syncPanel.style.display=syncMode?'block':'none';
+  if(syncMode){taps=[];updateSync();audio.currentTime=0;}
 });
-
-window.addEventListener("pointerup", () => 누르는중 = false);
-
-// 키보드로도 연주 (접근성)
-격자.addEventListener("keydown", e => {
-  if(e.key !== "Enter" && e.key !== " ") return;
-  e.preventDefault();
-  울리기(+e.target.dataset.i);
+function tap(){
+  if(!syncMode)return;
+  if(audio.paused)audio.play();
+  taps.push(+audio.currentTime.toFixed(2));updateSync();
+  if(taps.length===NW+1)applyTaps();
+}
+function applyTaps(){
+  T=taps.slice();
+  timingBox.value=JSON.stringify(T);
+  syncMsg.textContent='적용 완료! [타이밍 코드 복사]로 저장해 두세요.';
+  audio.pause();
+}
+document.getElementById('tapBtn').addEventListener('click',tap);
+document.getElementById('syncReset').addEventListener('click',()=>{taps=[];updateSync();syncMsg.textContent='';audio.currentTime=0;audio.play();});
+document.getElementById('copyTiming').addEventListener('click',()=>{
+  timingBox.value=JSON.stringify(T);
+  timingBox.select();document.execCommand('copy');
+  syncMsg.textContent='복사되었습니다.';
 });
+document.getElementById('applyTiming').addEventListener('click',()=>{
+  try{
+    const arr=JSON.parse(timingBox.value.trim());
+    if(!Array.isArray(arr)||arr.length!==NW+1)throw new Error(arr.length);
+    T=arr.map(Number);
+    syncMsg.textContent='타이밍을 적용했습니다. ('+arr.length+'개)';
+  }catch(e){syncMsg.textContent='형식 오류: 숫자 '+(NW+1)+'개 배열이어야 합니다. 예: [10.72, 12.1, ...]';}
+});
+/* ---------- 한 곡 반복 ---------- */
+document.getElementById('loopChk').addEventListener('change',e=>{audio.loop=e.target.checked;});
 
-document.getElementById("cascade").onclick = () => {
-  for(let i = 0; i < 칸수; i++) setTimeout(() => 울리기(i), i * 90);
+/* ---------- 음정 키 조절 (Web Audio 피치 시프터) ---------- */
+function createFadeBuffer(ctx,activeTime,fadeTime){
+  const len1=activeTime*ctx.sampleRate, len2=(activeTime-2*fadeTime)*ctx.sampleRate, len=len1+len2;
+  const buf=ctx.createBuffer(1,len,ctx.sampleRate), p=buf.getChannelData(0);
+  const fl=fadeTime*ctx.sampleRate, f1=fl, f2=len1-fl;
+  for(let i=0;i<len1;i++){
+    p[i]= i<f1 ? Math.sqrt(i/fl) : (i>=f2 ? Math.sqrt(1-(i-f2)/fl) : 1);
+  }
+  for(let i=len1;i<len;i++) p[i]=0;
+  return buf;
+}
+function createDelayTimeBuffer(ctx,activeTime,fadeTime,shiftUp){
+  const len1=activeTime*ctx.sampleRate, len2=(activeTime-2*fadeTime)*ctx.sampleRate, len=len1+len2;
+  const buf=ctx.createBuffer(1,len,ctx.sampleRate), p=buf.getChannelData(0);
+  for(let i=0;i<len1;i++) p[i]= shiftUp ? (len1-i)/len : i/len1;
+  for(let i=len1;i<len;i++) p[i]=0;
+  return buf;
+}
+const J_DELAY=0.100, J_FADE=0.050, J_BUF=0.100;
+function Jungle(ctx){
+  this.ctx=ctx;
+  this.input=ctx.createGain(); this.output=ctx.createGain();
+  const dnBuf=createDelayTimeBuffer(ctx,J_BUF,J_FADE,false);
+  const upBuf=createDelayTimeBuffer(ctx,J_BUF,J_FADE,true);
+  const fadeBuf=createFadeBuffer(ctx,J_BUF,J_FADE);
+  const src=n=>{const s=ctx.createBufferSource();s.buffer=n;s.loop=true;return s;};
+  const m1=src(dnBuf),m2=src(dnBuf),m3=src(upBuf),m4=src(upBuf),f1=src(fadeBuf),f2=src(fadeBuf);
+  this.m1g=ctx.createGain();this.m2g=ctx.createGain();
+  this.m3g=ctx.createGain();this.m4g=ctx.createGain();
+  this.m3g.gain.value=0;this.m4g.gain.value=0;
+  m1.connect(this.m1g);m2.connect(this.m2g);m3.connect(this.m3g);m4.connect(this.m4g);
+  this.g1=ctx.createGain();this.g2=ctx.createGain();
+  this.m1g.connect(this.g1);this.m3g.connect(this.g1);
+  this.m2g.connect(this.g2);this.m4g.connect(this.g2);
+  const d1=ctx.createDelay(1),d2=ctx.createDelay(1);
+  this.g1.connect(d1.delayTime);this.g2.connect(d2.delayTime);
+  const x1=ctx.createGain(),x2=ctx.createGain();
+  x1.gain.value=0;x2.gain.value=0;
+  f1.connect(x1.gain);f2.connect(x2.gain);
+  this.input.connect(d1);this.input.connect(d2);
+  d1.connect(x1);d2.connect(x2);
+  x1.connect(this.output);x2.connect(this.output);
+  const t=ctx.currentTime+0.05, t2=t+J_BUF-J_FADE;
+  m1.start(t);m3.start(t);f1.start(t);
+  m2.start(t2);m4.start(t2);f2.start(t2);
+  this.setDelay(J_DELAY);
+}
+Jungle.prototype.setDelay=function(d){
+  this.g1.gain.setTargetAtTime(0.5*d,this.ctx.currentTime,0.01);
+  this.g2.gain.setTargetAtTime(0.5*d,this.ctx.currentTime,0.01);
+};
+Jungle.prototype.setPitchOffset=function(mult){
+  const up=mult>0;
+  this.m1g.gain.value=up?0:1; this.m2g.gain.value=up?0:1;
+  this.m3g.gain.value=up?1:0; this.m4g.gain.value=up?1:0;
+  this.setDelay(J_DELAY*Math.abs(mult));
 };
 
-document.getElementById("random").onclick = () => {
-  for(let n = 0; n < 12; n++){
-    setTimeout(() => 울리기(Math.floor(Math.random() * 칸수)), n * 160);
+let keySemi=0, actx=null, jungle=null, dryGain=null, wetGain=null;
+const keyLabel=document.getElementById('keyLabel');
+function ensureAudioGraph(){
+  if(actx) { actx.resume(); return; }
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  const srcNode=actx.createMediaElementSource(audio);
+  dryGain=actx.createGain(); wetGain=actx.createGain(); wetGain.gain.value=0;
+  jungle=new Jungle(actx);
+  srcNode.connect(dryGain); dryGain.connect(actx.destination);
+  srcNode.connect(jungle.input); jungle.output.connect(wetGain); wetGain.connect(actx.destination);
+}
+function setKey(n){
+  keySemi=Math.max(-5,Math.min(5,n));
+  keyLabel.textContent='키 '+(keySemi>0?'+':'')+keySemi;
+  if(keySemi===0){
+    if(actx){dryGain.gain.value=1;wetGain.gain.value=0;}
+    return;
   }
-};
+  ensureAudioGraph();
+  jungle.setPitchOffset(Math.pow(2,keySemi/12)-1);
+  dryGain.gain.value=0; wetGain.gain.value=1;
+}
+document.getElementById('keyUp').addEventListener('click',()=>setKey(keySemi+1));
+document.getElementById('keyDown').addEventListener('click',()=>setKey(keySemi-1));
+audio.addEventListener('play',()=>{ if(actx) actx.resume(); });
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&e.target.tagName!=='TEXTAREA'){
+    e.preventDefault();
+    syncMode?tap():togglePlay();
+  }
+  if(e.code==='Backspace'&&syncMode&&e.target.tagName!=='TEXTAREA'){
+    e.preventDefault();
+    taps.pop();updateSync();syncMsg.textContent='마지막 탭을 취소했습니다.';
+  }
+});
 </script>
 </body>
 </html>
