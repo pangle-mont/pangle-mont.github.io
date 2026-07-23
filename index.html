@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>울림 격자 — 5음음계 웹 악기</title>
+<style>
+  :root{
+    --ink:#17111F;
+    --panel:#221829;
+    --chalk:#EFE7F5;
+    --muted:#8C7E9B;
+    --line:#3A2C46;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2C1E3A 0%, var(--ink) 55%);
+    min-height:100vh;
+    color:var(--chalk);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    padding:48px 20px 64px;
+  }
+
+  .eyebrow{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(30px,7vw,48px); font-weight:800; letter-spacing:-.03em;
+    line-height:1.05; text-align:center;
+  }
+  .sub{
+    color:var(--muted); font-size:14px; margin-top:12px;
+    text-align:center; line-height:1.7; max-width:34ch;
+  }
+
+  /* 격자 — 왼쪽 아래가 가장 낮은 음, 오른쪽 위로 갈수록 높아짐 */
+  #grid{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    width:min(520px,100%);
+    touch-action:none;      /* 모바일에서 끌기가 스크롤로 새지 않도록 */
+  }
+
+  .cell{
+    position:relative;
+    aspect-ratio:1/1;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+    color:var(--muted);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none;
+    transition:background .5s ease, color .5s ease, border-color .5s ease, transform .08s ease;
+  }
+  .cell:focus-visible{ outline:2px solid var(--chalk); outline-offset:3px; }
+
+  .cell.on{
+    background:hsl(var(--h) 70% 58%);
+    border-color:hsl(var(--h) 70% 72%);
+    color:#17111F;
+    transform:scale(.94);
+    transition:none;
+  }
+
+  /* 시그니처: 음이 울릴 때 퍼져 나가는 파동 */
+  .cell::after{
+    content:""; position:absolute; inset:0;
+    border:2px solid hsl(var(--h) 80% 70%);
+    border-radius:14px; opacity:0; pointer-events:none;
+  }
+  .cell.on::after{ animation:ring .7s ease-out; }
+  @keyframes ring{
+    from{ opacity:.9; transform:scale(1); }
+    to  { opacity:0;  transform:scale(1.9); }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .cell.on::after{ animation:none; }
+    .cell.on{ transform:none; }
+  }
+
+  .controls{ margin-top:28px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  button{
+    font-family:inherit; font-size:14px; font-weight:600;
+    color:var(--chalk); background:transparent;
+    border:1px solid var(--line); border-radius:999px;
+    padding:11px 22px; cursor:pointer;
+    transition:background .2s, border-color .2s;
+  }
+  button:hover{ background:var(--panel); border-color:var(--muted); }
+
+  footer{
+    margin-top:44px; color:var(--muted); font-size:12px;
+    text-align:center; line-height:1.9;
+  }
+  code{ font-family:ui-monospace,monospace; color:var(--chalk); }
+</style>
+</head>
+<body>
+
+  <p class="eyebrow">Web Audio · 단일 파일</p>
+  <h1>울림 격자</h1>
+  <p class="sub">칸을 누르면 소리가 납니다. 누른 채로 쓸어 보세요.<br>5음음계라 어떻게 눌러도 어울립니다.</p>
+
+  <div id="grid"></div>
+
+  <div class="controls">
+    <button id="cascade">차례로 울리기</button>
+    <button id="random">무작위로 12번</button>
+  </div>
+
+  <footer>
+    소리는 브라우저가 직접 만듭니다. 음원 파일이 없습니다.<br>
+    <code>index.html</code> 파일 하나로 동작합니다.
+  </footer>
+
+<script>
+/* ── 소리 만들기 ────────────────────────────────── */
+
+const 도레미솔라 = ["도","레","미","솔","라"];
+const 반음     = [0, 2, 4, 7, 9];   // 5음음계(펜타토닉)의 반음 간격
+const 칸수 = 20, 열수 = 5;
+const 기준음 = 130.81;               // 낮은 도(C3)의 진동수(Hz)
+
+let 오디오;                          // 첫 클릭 때 만들어집니다(브라우저 정책)
+
+function 진동수(i){
+  const 옥타브 = Math.floor(i / 5), 계이름 = i % 5;
+  return 기준음 * Math.pow(2, (반음[계이름] + 12 * 옥타브) / 12);
+}
+
+function 연주(i){
+  if(!오디오) 오디오 = new (window.AudioContext || window.webkitAudioContext)();
+  const t = 오디오.currentTime;
+
+  // 소리 크기 곡선: 순간적으로 커졌다가 서서히 사라짐
+  const 볼륨 = 오디오.createGain();
+  볼륨.gain.setValueAtTime(0, t);
+  볼륨.gain.linearRampToValueAtTime(0.14, t + 0.012);
+  볼륨.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+
+  // 고음을 깎아 부드럽게
+  const 필터 = 오디오.createBiquadFilter();
+  필터.type = "lowpass";
+  필터.frequency.value = 2600;
+
+  // 파형 두 개를 살짝 어긋나게 겹쳐 두툼한 음색을 만듦
+  [["triangle", 0], ["sine", 6]].forEach(([파형, 어긋남]) => {
+    const 발진기 = 오디오.createOscillator();
+    발진기.type = 파형;
+    발진기.frequency.value = 진동수(i);
+    발진기.detune.value = 어긋남;
+    발진기.connect(볼륨);
+    발진기.start(t);
+    발진기.stop(t + 1.7);
+  });
+
+  볼륨.connect(필터);
+  필터.connect(오디오.destination);
+}
+
+/* ── 화면 만들기 ────────────────────────────────── */
+
+const 격자 = document.getElementById("grid");
+const 칸들 = [];
+
+// 아래쪽이 낮은 음이 되도록 위에서부터 거꾸로 그림
+for(let 줄 = 3; 줄 >= 0; 줄--){
+  for(let 열 = 0; 열 < 열수; 열++){
+    const i = 줄 * 열수 + 열;
+    const 칸 = document.createElement("button");
+    칸.className = "cell";
+    칸.style.setProperty("--h", 350 - i * 9);      // 장미빛 → 금빛 → 옥빛
+    칸.textContent = 도레미솔라[i % 5] + (3 + Math.floor(i / 5));
+    칸.dataset.i = i;
+    격자.appendChild(칸);
+    칸들[i] = 칸;
+  }
+}
+
+function 울리기(i){
+  연주(i);
+  const 칸 = 칸들[i];
+  칸.classList.remove("on");
+  void 칸.offsetWidth;                              // 애니메이션 다시 시작시키기
+  칸.classList.add("on");
+  setTimeout(() => 칸.classList.remove("on"), 700);
+}
+
+/* ── 조작 ──────────────────────────────────────── */
+
+let 누르는중 = false;
+
+격자.addEventListener("pointerdown", e => {
+  const 칸 = e.target.closest(".cell");
+  if(!칸) return;
+  누르는중 = true;
+  울리기(+칸.dataset.i);
+});
+
+// 누른 채로 이동하면 손가락(마우스) 아래 칸이 계속 울림
+격자.addEventListener("pointermove", e => {
+  if(!누르는중) return;
+  const 칸 = document.elementFromPoint(e.clientX, e.clientY)?.closest(".cell");
+  if(칸 && !칸.classList.contains("on")) 울리기(+칸.dataset.i);
+});
+
+window.addEventListener("pointerup", () => 누르는중 = false);
+
+// 키보드로도 연주 (접근성)
+격자.addEventListener("keydown", e => {
+  if(e.key !== "Enter" && e.key !== " ") return;
+  e.preventDefault();
+  울리기(+e.target.dataset.i);
+});
+
+document.getElementById("cascade").onclick = () => {
+  for(let i = 0; i < 칸수; i++) setTimeout(() => 울리기(i), i * 90);
+};
+
+document.getElementById("random").onclick = () => {
+  for(let n = 0; n < 12; n++){
+    setTimeout(() => 울리기(Math.floor(Math.random() * 칸수)), n * 160);
+  }
+};
+</script>
+</body>
+</html>
