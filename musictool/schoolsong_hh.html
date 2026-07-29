@@ -23,7 +23,7 @@ body{
   font-family:'Gowun Dodum',-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
   background:
     linear-gradient(180deg,rgba(4,14,28,.66) 0%,rgba(5,18,36,.58) 45%,rgba(4,14,28,.78) 100%),
-    url("assets/background.jpg") center/cover no-repeat fixed,
+    url("assets/schoolsong_hh_background.jpg") center/cover no-repeat fixed,
     var(--sea-deep);
   color:var(--foam);
   display:flex;flex-direction:column;
@@ -237,7 +237,7 @@ let T = [10.62,12.57,13.44,15.15,17.69,19.92,21.64,22.49,24.31,26,27.17,29.61,31
 const audio=document.getElementById('audio');
 const errBox=document.getElementById('audioErr');
 function showErr(m){errBox.style.display='block';document.getElementById('errMsg').textContent=m;}
-audio.src='assets/school-song.mp3';
+audio.src='assets/schoolsong_hh_school-song.mp3';
 audio.addEventListener('error',()=>{const c=audio.error?audio.error.code:0;showErr('음원 재생 오류(코드 '+c+'). MP3 파일을 직접 선택해 주세요.');});
 audio.addEventListener('canplay',()=>{errBox.style.display='none';});
 document.getElementById('filePick').addEventListener('change',e=>{
